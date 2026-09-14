@@ -29,6 +29,21 @@ Alternatively, drag-and-drop the project folder onto
 
 ## Custom bird sprite
 
-Drop a transparent PNG at `assets/bird.png` (roughly square, ~64x64px) and
-it will automatically replace the placeholder bird box — no code changes
-needed.
+The bird image is baked directly into `index.html` as a base64 data URI, so
+the game always shows the real sprite no matter how the file is copied,
+downloaded, or hosted — no separate `assets/` folder required.
+
+`assets/bird.png` in this repo is kept as the editable source image. To swap
+in a new sprite:
+
+1. Replace `assets/bird.png` with your own image (roughly square works best).
+2. Re-embed it into `index.html`:
+   ```sh
+   python3 -c "
+   import base64
+   b64 = base64.b64encode(open('assets/bird.png','rb').read()).decode()
+   print(len(b64), 'chars')
+   " # then paste the base64 into BIRD_IMAGE_SRC in index.html
+   ```
+   or run any base64 encoder and replace the `data:image/png;base64,...`
+   string assigned to `BIRD_IMAGE_SRC` near the top of the `<script>` block.
