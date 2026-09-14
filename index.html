@@ -106,6 +106,7 @@
   const GROUND_HEIGHT = 90;
   const BIRD_SIZE = 32;
   const BIRD_X = W * 0.3;
+  const FLIP_DURATION = 0.5; // seconds for a flap-triggered flip to unwind
 
   const FLAG_BLUE = "#0038b8";
   const FLAG_WHITE = "#ffffff";
@@ -182,6 +183,7 @@
       y: H / 2,
       vy: 0,
       rotation: 0,
+      flipTimer: FLIP_DURATION, // fully unwound — no spin at rest
     };
     pipes = [];
     score = 0;
@@ -298,8 +300,10 @@
     if (state === "ready") {
       state = "playing";
       bird.vy = FLAP_VELOCITY;
+      bird.flipTimer = 0;
     } else if (state === "playing") {
       bird.vy = FLAP_VELOCITY;
+      bird.flipTimer = 0;
     } else if (state === "dead" || state === "won") {
       if (performance.now() - deathTime > 400) {
         startGame();
@@ -916,7 +920,16 @@
     if (bird.vy > MAX_FALL_SPEED) bird.vy = MAX_FALL_SPEED;
     bird.y += bird.vy * dt;
 
-    bird.rotation = Math.max(-0.5, Math.min(1.3, bird.vy / 500));
+    // Base pitch: nose-up on a flap, nose-down as it falls.
+    const tilt = Math.max(-0.5, Math.min(1.3, bird.vy / 500));
+
+    // Each flap kicks off a full 360° flip that unwinds over FLIP_DURATION,
+    // landing back on the base tilt. Mashing the flap key/tap chains flips.
+    bird.flipTimer += dt;
+    const flipT = Math.min(bird.flipTimer / FLIP_DURATION, 1);
+    const spin = (1 - flipT) * Math.PI * 2;
+
+    bird.rotation = tilt + spin;
 
     const pipeSpeed = currentPipeSpeed();
     for (const pipe of pipes) {
